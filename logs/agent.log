@@ -1,0 +1,60 @@
+Info	2016/05/10 14:26:50 log.go:25: [[ModuleAB agent 0.0.0-Haven starting...] ] 
+Debug	2016/05/10 14:26:50 log.go:25: [Got server: http://localhost:7001] 
+Debug	2016/05/10 14:26:50 log.go:25: [Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o] 
+Info	2016/05/10 14:28:25 log.go:25: [[ModuleAB agent 0.0.0-Haven starting...] ] 
+Debug	2016/05/10 14:28:25 log.go:25: [Got server: http://localhost:7001] 
+Debug	2016/05/10 14:28:25 log.go:25: [Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o] 
+Info	2016/05/10 14:28:59 log.go:25: [[ModuleAB agent 0.0.0-Haven starting...] ] 
+Debug	2016/05/10 14:28:59 log.go:25: [Got server: http://localhost:7001] 
+Debug	2016/05/10 14:28:59 log.go:25: [Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o] 
+Info	2016/05/10 14:38:10 log.go:25: [[ModuleAB agent 0.0.0-Haven starting...] ] 
+Debug	2016/05/10 14:38:10 log.go:25: [Got server: http://localhost:7001] 
+Debug	2016/05/10 14:38:10 log.go:25: [Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o] 
+Info	2016/05/10 14:40:38 log.go:25: [[ModuleAB agent 0.0.0-Haven starting...] ]  
+Debug	2016/05/10 14:40:38 log.go:25: [Got server: http://localhost:7001]  
+Debug	2016/05/10 14:40:38 log.go:25: [Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o]  
+Info	2016/05/10 14:41:11 log.go:25: [[ModuleAB agent 0.0.0-Haven starting...] ]  
+Debug	2016/05/10 14:41:11 log.go:25: [Got server: http://localhost:7001]  
+Debug	2016/05/10 14:41:11 log.go:25: [Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o]  
+Info	2016/05/10 14:42:30 log.go:25: [[ModuleAB agent 0.0.0-Haven starting...] ]  
+Debug	2016/05/10 14:42:30 log.go:25: [Got server: http://localhost:7001]  
+Debug	2016/05/10 14:42:30 log.go:25: [Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o]  
+Info	2016/05/10 14:45:27 log.go:26: ModuleAB agent 0.0.0-Haven starting...] ]  
+Debug	2016/05/10 14:45:27 log.go:26: Got server: http://localhost:7001]  
+Debug	2016/05/10 14:45:27 log.go:26: Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o]  
+Info	2016/05/10 14:46:17 log.go:26: ModuleAB agent 0.0.0-Haven starting...
+Debug	2016/05/10 14:46:17 log.go:26: Got server: http://localhost:7001
+Debug	2016/05/10 14:46:17 log.go:26: Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o
+Info	2016/05/10 14:47:36 log.go:26: ModuleAB agent 0.0.0-Haven starting...
+Debug	2016/05/10 14:47:36 log.go:26: Got server: http://localhost:7001
+Debug	2016/05/10 14:47:36 log.go:26: Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o
+Info	2016/05/10 14:48:12 log.go:26: ModuleAB agent 0.0.0-Haven starting...
+Debug	2016/05/10 14:48:12 log.go:26: Got server: http://localhost:7001
+Debug	2016/05/10 14:48:12 log.go:26: Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o
+Info	2016/05/10 15:04:31 log.go:26: ModuleAB agent 0.0.0-Haven starting...
+Debug	2016/05/10 15:04:31 log.go:26: Got server: http://localhost:7001
+Debug	2016/05/10 15:04:31 log.go:26: Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o
+Info	2016/05/10 15:16:22 log.go:26: ModuleAB agent 0.0.0-Haven starting...
+Debug	2016/05/10 15:16:22 log.go:26: Got server: http://localhost:7001
+Debug	2016/05/10 15:16:22 log.go:26: Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o
+Debug	2016/05/10 15:16:22 log.go:26: Got Error Client time is out of server time
+Info	2016/05/10 15:22:40 log.go:26: ModuleAB agent 0.0.0-Haven starting...
+Debug	2016/05/10 15:22:40 log.go:26: Got server: http://localhost:7001
+Debug	2016/05/10 15:22:40 log.go:26: Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o
+Debug	2016/05/10 15:22:40 log.go:26: Got Error Bad signature.
+Info	2016/05/10 15:24:29 log.go:26: ModuleAB agent 0.0.0-Haven starting...
+Debug	2016/05/10 15:24:29 log.go:26: Got server: http://localhost:7001
+Debug	2016/05/10 15:24:29 log.go:26: Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o
+Debug	2016/05/10 15:24:29 log.go:26: Got Error Bad signature.
+Info	2016/05/10 15:25:14 log.go:26: ModuleAB agent 0.0.0-Haven starting...
+Debug	2016/05/10 15:25:14 log.go:26: Got server: http://localhost:7001
+Debug	2016/05/10 15:25:14 log.go:26: Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o
+Debug	2016/05/10 15:25:14 log.go:26: Got config <nil>
+Info	2016/05/10 16:51:22 log.go:26: ModuleAB agent 0.0.0-Haven starting...
+Debug	2016/05/10 16:51:22 log.go:26: Got server: http://localhost:7001
+Debug	2016/05/10 16:51:22 log.go:26: Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o
+Debug	2016/05/10 16:51:22 log.go:26: Got config 0xc8201120a0
+Info	2016/05/10 16:52:09 log.go:26: ModuleAB agent 0.0.0-Haven starting...
+Debug	2016/05/10 16:52:09 log.go:26: Got server: http://localhost:7001
+Debug	2016/05/10 16:52:09 log.go:26: Got login key: 61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o
+Debug	2016/05/10 16:52:09 log.go:26: Got config TestAbcd TestAAA

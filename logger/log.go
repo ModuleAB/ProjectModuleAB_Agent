@@ -1,0 +1,118 @@
+package logger
+
+import (
+	"fmt"
+	"log"
+	"moduleab_agent/consts"
+	"os"
+	"strings"
+)
+
+const (
+	LogLevelDebug = iota
+	LogLevelInformation
+	LogLevelWarning
+	LogLevelError
+	LogLevelFatal
+)
+
+type Logger struct {
+	log.Logger
+	Level int
+}
+
+func (l *Logger) out(level string, v interface{}) {
+	l.SetPrefix(level)
+	l.Println(interfaceToLog(v))
+}
+
+func (l *Logger) Debug(v ...interface{}) {
+	if l.Level >= LogLevelDebug {
+		l.out("Debug\t", v)
+	}
+}
+
+func (l *Logger) Information(v ...interface{}) {
+	if l.Level >= LogLevelInformation {
+		l.out("Info\t", v)
+	}
+}
+
+func (l *Logger) Info(v ...interface{}) {
+	l.Information(v)
+}
+
+func (l *Logger) Warning(v ...interface{}) {
+	if l.Level >= LogLevelWarning {
+		l.out("Warn\t", v)
+	}
+}
+
+func (l *Logger) Warn(v ...interface{}) {
+	l.Warning(v)
+}
+
+func (l *Logger) Error(v ...interface{}) {
+	if l.Level >= LogLevelError {
+		l.out("Error\t", v)
+	}
+}
+
+func (l *Logger) Fatal(v ...interface{}) {
+	if l.Level >= LogLevelFatal {
+		l.out("Fatal\t", v)
+	}
+}
+
+var AppLog Logger
+
+func init() {
+	w, err := os.OpenFile(
+		consts.DefaultLogFile,
+		os.O_APPEND|os.O_CREATE|os.O_RDWR,
+		0666,
+	)
+	if err != nil {
+		fmt.Fprintln(
+			os.Stderr, consts.ErrorFormat,
+			"Cannot write log file.", err,
+		)
+		os.Exit(1)
+	}
+	AppLog.SetFlags(log.LstdFlags | log.Lshortfile)
+	AppLog.SetOutput(w)
+	AppLog.Level = LogLevelInformation
+}
+
+func StringLevelToInt(l string) int {
+	switch l {
+	case "deb":
+		fallthrough
+	case "debug":
+		return LogLevelDebug
+	case "warn":
+		fallthrough
+	case "warning":
+		return LogLevelWarning
+	case "error":
+		fallthrough
+	case "err":
+		return LogLevelError
+	case "fatal":
+		return LogLevelFatal
+	case "info":
+		fallthrough
+	case "information":
+		fallthrough
+	default:
+		return LogLevelInformation
+	}
+}
+
+func interfaceToLog(v ...interface{}) string {
+	var s string
+	for _, n := range v {
+		s = fmt.Sprintf("%s%v ", s, n)
+	}
+	return strings.Trim(s, "[] ")
+}
