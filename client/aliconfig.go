@@ -44,6 +44,8 @@ func GetAliConfig() (*AliConfig, error) {
 			return nil, err
 		}
 		return nil, fmt.Errorf(e["error"])
+	default:
+		return nil, fmt.Errorf("Unkown error:%d", resp.StatusCode)
 	}
 	return nil, nil
 }

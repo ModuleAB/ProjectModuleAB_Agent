@@ -17,7 +17,7 @@ func init() {
 
 func MakeRequest(method, url string, body io.Reader) (*http.Request, error) {
 	url = fmt.Sprintf("%s%s", common.Server, url)
-	req, err := http.NewRequest("GET", url, body)
+	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
 	}
