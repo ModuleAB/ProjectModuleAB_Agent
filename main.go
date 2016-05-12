@@ -52,7 +52,11 @@ func run(c *client.AliConfig) {
 		r := process.NewRemoveManager()
 		r.Update(d)
 	}
-	go process.RunWebsocket(d, c.ApiKey, c.ApiSecret)
+	go func() {
+		for {
+			process.RunWebsocket(d, c.ApiKey, c.ApiSecret)
+		}
+	}()
 	b.Update(d.Paths)
 	b.Run(d)
 }
