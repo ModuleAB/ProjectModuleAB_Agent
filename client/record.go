@@ -55,3 +55,69 @@ func UploadRecord(r *models.Records) error {
 	}
 	return fmt.Errorf("Unknown error.")
 }
+
+func CheckRecords(record *models.Records) (bool, error) {
+	req, err := MakeRequest(
+		"GET",
+		fmt.Sprintf(
+			"/api/v1/records?path=%s&filename=%s&host=%s&appSet=%s&backupSet=%s",
+			record.Path.Path,
+			record.Filename,
+			record.Host.Name,
+			record.AppSet.Name,
+			record.BackupSet.Name,
+		),
+		nil,
+	)
+	if err != nil {
+		return false, err
+	}
+	resp, err := StdHttp.Do(req)
+	if err != nil {
+		return false, err
+	}
+	switch resp.StatusCode {
+	case http.StatusForbidden:
+		e := make(map[string]string)
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return false, err
+		}
+		err = json.Unmarshal(b, &e)
+		if err != nil {
+			return false, err
+		}
+		return false, fmt.Errorf(e["error"])
+	case http.StatusBadRequest:
+		fallthrough
+	case http.StatusInternalServerError:
+		e := make(map[string]string)
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return false, err
+		}
+		err = json.Unmarshal(b, &e)
+		if err != nil {
+			return false, err
+		}
+		return false, fmt.Errorf("%s %s", e["message"], e["error"])
+	case http.StatusOK:
+		records := make([]*models.Records, 0)
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return false, err
+		}
+		err = json.Unmarshal(b, &records)
+		if err != nil {
+			return false, err
+		}
+		for _, v := range records {
+			if v.GetFullPath() == record.GetFullPath() {
+				return true, nil
+			}
+		}
+	default:
+		return false, fmt.Errorf("Unknown error: %d", resp.StatusCode)
+	}
+	return false, nil
+}

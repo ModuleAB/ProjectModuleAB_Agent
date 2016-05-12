@@ -3,6 +3,7 @@ package process
 import (
 	"fmt"
 	"moduleab_agent/client"
+	"moduleab_agent/common"
 	"moduleab_agent/logger"
 	"moduleab_server/models"
 	"path"
@@ -15,29 +16,35 @@ import (
 
 type BackupManager struct {
 	JobList []string
-	Oss     *oss.Client
+	client.AliConfig
 	Watcher *inotify.Watcher
+	host    *models.Hosts
 }
 
-func NewBackupManager(
-	endpoint, apikey, apisecret string) (*BackupManager, error) {
+func NewBackupManager(config client.AliConfig) (*BackupManager, error) {
 	var err error
 	b := new(BackupManager)
 	b.JobList = make([]string, 0)
-	b.Oss, err = oss.New(endpoint, apikey, apisecret)
-	if err != nil {
-		return nil, err
-	}
-	b.bucket = bucket
+	b.AliConfig = config
 	b.Watcher, err = inotify.NewWatcher()
 	if err != nil {
 		return nil, err
 	}
-	return b
+	return b, nil
 }
 
 func (b *BackupManager) Update(ps []*models.Paths) error {
 	for _, v := range ps {
+		found := false
+		for _, v0 := range b.JobList {
+			if v.Path == v0 {
+				found = true
+				break
+			}
+		}
+		if found {
+			continue
+		}
 		err := b.Watcher.AddWatch(
 			v.Path, inotify.IN_CLOSE_WRITE|inotify.IN_MOVED_TO)
 		if err != nil {
@@ -48,49 +55,52 @@ func (b *BackupManager) Update(ps []*models.Paths) error {
 	}
 	for k, v := range b.JobList {
 		found := false
-		for _, v := range ps {
-			if v.Path == v {
+		for _, v0 := range ps {
+			if v0.Path == v {
 				found = true
 				break
 			}
 		}
 		if !found {
-			b.Watcher.RemoveWatch(v.Path)
+			err := b.Watcher.RemoveWatch(v)
 			if err != nil {
 				logger.AppLog.Warning("Monitor stop failed:", err)
 				continue
 			}
 			logger.AppLog.Info("Monitor for", k, "stopped.")
-		}
-		b.JobList[k] = ""
-	}
-	nJobList := make([]string, 0)
-	for _, v := range b.JobList {
-		if v != "" {
-			nJobList = append(nJobList, v)
+			b.JobList = append(b.JobList[:k], b.JobList[k+1:]...)
 		}
 	}
-	b.JobList = nJobList
+	return nil
 }
 
-func (b *BackupManager) Run(h *models.Hosts) error {
+func (b *BackupManager) Run(h *models.Hosts) {
+	logger.AppLog.Info("Backup process started.")
 	for {
 		select {
 		case event := <-b.Watcher.Event:
 			for _, v := range h.Paths {
 				if strings.HasPrefix(event.Name, v.Path) {
 					record := &models.Records{
-						Filename:   strings.Replace(event.Name, v.Path, "", -1),
+						Filename: strings.Replace(
+							event.Name, v.Path, "", -1),
 						Host:       h,
 						BackupSet:  v.BackupSet,
 						AppSet:     h.AppSet,
-						Path:       v.Path,
+						Path:       v,
 						Type:       models.RecordTypeBackup,
 						BackupTime: time.Now(),
 					}
-					bucket, err := b.Oss.Bucket(v.BackupSet.Oss.BucketName)
+					ossclient, err := oss.New(
+						v.BackupSet.Oss.Endpoint, b.ApiKey, b.ApiSecret)
 					if err != nil {
-						logger.AppLog.Warn("Error while retrievaling bucket:", err)
+						logger.AppLog.Warn("Error while connect to oss:", err)
+						continue
+					}
+					bucket, err := ossclient.Bucket(v.BackupSet.Oss.BucketName)
+					if err != nil {
+						logger.AppLog.Warn(
+							"Error while retrievaling bucket:", err)
 						continue
 					}
 
@@ -116,7 +126,7 @@ func (b *BackupManager) Run(h *models.Hosts) error {
 						record.GetFullPath(),
 						event.Name,
 						512*1024,
-						oss.Routines(3),
+						oss.Routines(common.UploadThreads),
 						oss.Checkpoint(true, ""),
 					)
 					if err != nil {
@@ -124,7 +134,6 @@ func (b *BackupManager) Run(h *models.Hosts) error {
 							"Error while uploading:", err)
 						continue
 					}
-					// TODO 注册相关信息
 					err = client.UploadRecord(record)
 					if err != nil {
 						logger.AppLog.Warn(

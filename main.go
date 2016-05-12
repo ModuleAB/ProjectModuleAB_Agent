@@ -5,8 +5,8 @@ import (
 	"moduleab_agent/common"
 	"moduleab_agent/conf"
 	"moduleab_agent/logger"
+	"moduleab_agent/process"
 	"os"
-	"time"
 )
 
 func main() {
@@ -22,9 +22,10 @@ func main() {
 		os.Exit(1)
 	}
 	logger.AppLog.Debug("Got config", c.ApiKey, c.ApiSecret)
+	run(c)
 }
 
-func run() {
+func run(c *client.AliConfig) {
 	d, err := client.RegisterHost()
 	if err != nil {
 		logger.AppLog.Debug("Got Error:", err)
@@ -32,24 +33,26 @@ func run() {
 	}
 	if d == nil {
 		logger.AppLog.Info("Register host succeed. waiting complete info.")
+		os.Exit(0)
 	}
-	for {
-		select {
-		case <-time.Tick(time.Minute):
-			d, err := client.RegisterHost()
-			if err != nil {
-				logger.AppLog.Debug("Got Error:", err)
-				continue
-			}
-			if d.AppSet == nil {
-				logger.AppLog.Info("App set not found. wait until ok.")
-				continue
-			}
-			if len(d.BackupSets) == 0 {
-				logger.AppLog.Info("No valid backup set found. wait until ok.")
-				continue
-			}
-
-		}
+	b, err := process.NewBackupManager(*c)
+	if err != nil {
+		logger.AppLog.Warn("Got error while making backup manager:", err)
+		os.Exit(1)
 	}
+	if d.AppSet == nil {
+		logger.AppLog.Info("App set not found. wait until ok.")
+		os.Exit(1)
+	}
+	if len(d.Paths) == 0 {
+		logger.AppLog.Info("No valid Path found. wait until ok.")
+		os.Exit(1)
+	}
+	if len(d.ClientJobs) != 0 {
+		r := process.NewRemoveManager()
+		r.Update(d)
+	}
+	go process.RunWebsocket(d, c.ApiKey, c.ApiSecret)
+	b.Update(d.Paths)
+	b.Run(d)
 }

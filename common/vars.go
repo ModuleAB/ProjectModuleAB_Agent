@@ -6,8 +6,9 @@ import (
 )
 
 var (
-	Server   string
-	LoginKey string
+	Server        string
+	LoginKey      string
+	UploadThreads int
 )
 
 func init() {
@@ -19,11 +20,19 @@ func init() {
 		&LoginKey, "key", "",
 		"Specify ModuleAB login key",
 	)
+	flag.IntVar(
+		&UploadThreads, "threads", 3,
+		"Specify ModuleAB upload threads.",
+	)
 	flag.Parse()
 	if Server == "" {
 		Server = conf.AppConfig.GetString("server")
 	}
 	if LoginKey == "" {
 		LoginKey = conf.AppConfig.GetString("loginkey")
+	}
+	thereads, err := conf.AppConfig.GetInt("uploadthreads")
+	if err == nil && thereads > 0 && UploadThreads == 3 {
+		UploadThreads = thereads
 	}
 }
