@@ -7,6 +7,7 @@ import (
 	"moduleab_agent/logger"
 	"moduleab_server/models"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -80,10 +81,15 @@ func (b *BackupManager) Run(h *models.Hosts) {
 		select {
 		case event := <-b.Watcher.Event:
 			for _, v := range h.Paths {
-				if strings.HasPrefix(event.Name, v.Path) {
+				filename, err := filepath.Abs(event.Name)
+				if err != nil {
+					logger.AppLog.Warn("Failed to fetch path:", err)
+					continue
+				}
+				if strings.HasPrefix(filename, v.Path) {
 					record := &models.Records{
 						Filename: strings.Replace(
-							event.Name, v.Path, "", -1),
+							filename, v.Path, "", 1),
 						Host:       h,
 						BackupSet:  v.BackupSet,
 						AppSet:     h.AppSet,
