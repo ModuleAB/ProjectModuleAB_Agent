@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"moduleab_agent/client"
 	"moduleab_agent/common"
 	"moduleab_agent/conf"
@@ -21,6 +23,11 @@ func main() {
 		logger.AppLog.Debug("Got Error:", err)
 		os.Exit(1)
 	}
+	ioutil.WriteFile(
+		conf.AppConfig.GetString("pidfile"),
+		[]byte(fmt.Sprint(os.Getpid())),
+		0600,
+	)
 	logger.AppLog.Debug("Got config", c.ApiKey, c.ApiSecret)
 	run(c)
 }
