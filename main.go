@@ -9,6 +9,7 @@ import (
 	"moduleab_agent/logger"
 	"moduleab_agent/process"
 	"os"
+	"runtime"
 )
 
 func main() {
@@ -30,6 +31,16 @@ func main() {
 	)
 	logger.AppLog.Debug("Got config", c.ApiKey, c.ApiSecret)
 	run(c)
+	defer func() {
+		x := recover()
+		if x != nil {
+			logger.AppLog.Error("Got fatal error:", x)
+			stack := make([]byte, 0)
+			runtime.Stack(stack, true)
+			logger.AppLog.Error("Stack trace:\n", string(stack))
+			os.Exit(1)
+		}
+	}()
 }
 
 func run(c *client.AliConfig) {
