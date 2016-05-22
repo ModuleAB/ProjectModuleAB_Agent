@@ -8,6 +8,7 @@ import (
 	"moduleab_agent/conf"
 	"moduleab_agent/logger"
 	"moduleab_agent/process"
+	"moduleab_server/version"
 	"os"
 	"runtime"
 )
