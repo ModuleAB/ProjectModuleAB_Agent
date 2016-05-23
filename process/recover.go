@@ -36,6 +36,7 @@ func RunWebsocket(h *models.Hosts, apikey, apisecret string) {
 		return
 	}
 	defer conn.Close()
+	logger.AppLog.Info("Websocket established.")
 	for {
 		msg := make(models.Signal)
 		err := conn.ReadJSON(&msg)
@@ -52,7 +53,6 @@ func RunWebsocket(h *models.Hosts, apikey, apisecret string) {
 			continue
 		}
 	}
-
 }
 
 func DoDownload(s models.Signal, apikey, apisecret string) {

@@ -98,6 +98,11 @@ func (r *RemoveManager) Run(
 							logger.AppLog.Warn("Got error:", err)
 							continue
 						}
+						logger.AppLog.Info(
+							"File:",
+							path.Join(mpath.Path, file.Name()),
+							"removed.",
+						)
 					}
 				}
 			}

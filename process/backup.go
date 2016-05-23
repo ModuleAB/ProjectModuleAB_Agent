@@ -52,6 +52,7 @@ func (b *BackupManager) Update(ps []*models.Paths) error {
 			logger.AppLog.Warning("Monitor start failed:", err)
 			continue
 		}
+		logger.AppLog.Info("Monitor for", v.Path, "started.")
 		b.JobList = append(b.JobList, v.Path)
 	}
 	for k, v := range b.JobList {
@@ -80,6 +81,7 @@ func (b *BackupManager) Run(h *models.Hosts) {
 	for {
 		select {
 		case event := <-b.Watcher.Event:
+			logger.AppLog.Debug("Get event:", event)
 			for _, v := range h.Paths {
 				filename, err := filepath.Abs(event.Name)
 				if err != nil {
@@ -97,6 +99,7 @@ func (b *BackupManager) Run(h *models.Hosts) {
 						Type:       models.RecordTypeBackup,
 						BackupTime: time.Now(),
 					}
+					logger.AppLog.Debug("Record:", record)
 					ossclient, err := oss.New(
 						v.BackupSet.Oss.Endpoint, b.ApiKey, b.ApiSecret)
 					if err != nil {
@@ -117,7 +120,7 @@ func (b *BackupManager) Run(h *models.Hosts) {
 					)
 					for _, p := range ps {
 						dir = fmt.Sprintf("%s%s/", dir, p)
-						err := bucket.PutObject(dir, strings.NewReader(""))
+						err = bucket.PutObject(dir, strings.NewReader(""))
 						if err != nil {
 							logger.AppLog.Warn(
 								"Error while making dir on bucket:", err)
