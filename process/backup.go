@@ -89,7 +89,7 @@ func (b *BackupManager) Run(h *models.Hosts) {
 					continue
 				}
 				if strings.HasPrefix(filename, v.Path) {
-					if v.BackupSet == nil || v.AppSet == nil {
+					if v.BackupSet == nil {
 						logger.AppLog.Warn("No BackupSet or AppSet got, skip")
 						continue
 					}
