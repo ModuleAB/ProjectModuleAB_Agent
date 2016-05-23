@@ -27,13 +27,13 @@ func (l *Logger) out(level string, v interface{}) {
 }
 
 func (l *Logger) Debug(v ...interface{}) {
-	if l.Level >= LogLevelDebug {
+	if l.Level <= LogLevelDebug {
 		l.out("Debug\t", v)
 	}
 }
 
 func (l *Logger) Information(v ...interface{}) {
-	if l.Level >= LogLevelInformation {
+	if l.Level <= LogLevelInformation {
 		l.out("Info\t", v)
 	}
 }
@@ -43,7 +43,7 @@ func (l *Logger) Info(v ...interface{}) {
 }
 
 func (l *Logger) Warning(v ...interface{}) {
-	if l.Level >= LogLevelWarning {
+	if l.Level <= LogLevelWarning {
 		l.out("Warn\t", v)
 	}
 }
@@ -53,13 +53,13 @@ func (l *Logger) Warn(v ...interface{}) {
 }
 
 func (l *Logger) Error(v ...interface{}) {
-	if l.Level >= LogLevelError {
+	if l.Level <= LogLevelError {
 		l.out("Error\t", v)
 	}
 }
 
 func (l *Logger) Fatal(v ...interface{}) {
-	if l.Level >= LogLevelFatal {
+	if l.Level <= LogLevelFatal {
 		l.out("Fatal\t", v)
 	}
 }
