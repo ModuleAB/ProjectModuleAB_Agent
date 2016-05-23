@@ -79,7 +79,7 @@ func init() {
 		)
 		os.Exit(1)
 	}
-	AppLog.SetFlags(log.LstdFlags | log.Lshortfile)
+	AppLog.SetFlags(log.LstdFlags)
 	AppLog.SetOutput(w)
 	AppLog.Level = LogLevelInformation
 }
