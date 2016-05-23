@@ -93,9 +93,9 @@ func (b *BackupManager) Run(h *models.Hosts) {
 						logger.AppLog.Warn("No BackupSet or AppSet got, skip")
 						continue
 					}
+					_, file := path.Split(filename)
 					record := &models.Records{
-						Filename: strings.Replace(
-							filename, v.Path, "", 1),
+						Filename:   file,
 						Host:       h,
 						BackupSet:  v.BackupSet,
 						AppSet:     h.AppSet,
@@ -103,6 +103,7 @@ func (b *BackupManager) Run(h *models.Hosts) {
 						Type:       models.RecordTypeBackup,
 						BackupTime: time.Now(),
 					}
+					logger.AppLog.Debug("Now is:", time.Now().Format(time.RFC3339))
 					logger.AppLog.Debug("Record:", record)
 					ossclient, err := oss.New(
 						v.BackupSet.Oss.Endpoint, b.ApiKey, b.ApiSecret)
