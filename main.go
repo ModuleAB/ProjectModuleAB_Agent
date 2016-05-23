@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	logger.Init()
 	logger.AppLog.Info("ModuleAB agent", version.Version, "starting...")
 	logger.AppLog.Level = logger.StringLevelToInt(
 		conf.AppConfig.GetString("loglevel"),
@@ -71,15 +72,14 @@ func run(c *client.AliConfig) {
 		fmt.Println("No valid Path found. wait until ok.")
 		os.Exit(1)
 	}
+	logger.AppLog.Info("Starting remove manager...")
 	if len(d.ClientJobs) != 0 {
 		r := process.NewRemoveManager()
 		r.Update(d)
 	}
-	go func() {
-		for {
-			process.RunWebsocket(d, c.ApiKey, c.ApiSecret)
-		}
-	}()
+	logger.AppLog.Info("Starting recover manager...")
+	go process.RunWebsocket(d, c.ApiKey, c.ApiSecret)
+	logger.AppLog.Info("Starting backup manager...")
 	b.Update(d.Paths)
 	b.Run(d)
 }

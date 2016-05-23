@@ -66,7 +66,7 @@ func (l *Logger) Fatal(v ...interface{}) {
 
 var AppLog Logger
 
-func init() {
+func Init() {
 	w, err := os.OpenFile(
 		consts.DefaultLogFile,
 		os.O_APPEND|os.O_CREATE|os.O_RDWR,

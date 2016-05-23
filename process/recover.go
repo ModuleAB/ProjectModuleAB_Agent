@@ -76,12 +76,10 @@ func DoDownload(s models.Signal, apikey, apisecret string) {
 		localPath := "/" + path.Join(
 			strings.Split(s["path"].(string), "/")[2:]...,
 		)
-		err = bucket.DownloadFile(
+		err = bucket.GetObjectToFile(
 			s["path"].(string),
 			localPath,
-			512*1024,
 			oss.Routines(common.UploadThreads),
-			oss.Checkpoint(true, ""),
 		)
 		if err != nil {
 			logger.AppLog.Warn("Got error:", err)

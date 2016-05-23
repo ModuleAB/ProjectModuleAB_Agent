@@ -89,6 +89,10 @@ func (b *BackupManager) Run(h *models.Hosts) {
 					continue
 				}
 				if strings.HasPrefix(filename, v.Path) {
+					if v.BackupSet == nil || v.AppSet == nil {
+						logger.AppLog.Warn("No BackupSet or AppSet got, skip")
+						continue
+					}
 					record := &models.Records{
 						Filename: strings.Replace(
 							filename, v.Path, "", 1),
@@ -104,11 +108,14 @@ func (b *BackupManager) Run(h *models.Hosts) {
 						v.BackupSet.Oss.Endpoint, b.ApiKey, b.ApiSecret)
 					if err != nil {
 						logger.AppLog.Warn("Error while connect to oss:", err)
+						fmt.Println("Error while connect to oss:", err)
 						continue
 					}
 					bucket, err := ossclient.Bucket(v.BackupSet.Oss.BucketName)
 					if err != nil {
 						logger.AppLog.Warn(
+							"Error while retrievaling bucket:", err)
+						fmt.Println(
 							"Error while retrievaling bucket:", err)
 						continue
 					}
@@ -124,6 +131,8 @@ func (b *BackupManager) Run(h *models.Hosts) {
 						if err != nil {
 							logger.AppLog.Warn(
 								"Error while making dir on bucket:", err)
+							fmt.Println(
+								"Error while making dir on bucket:", err)
 							dirCreated = false
 							break
 						}
@@ -131,21 +140,23 @@ func (b *BackupManager) Run(h *models.Hosts) {
 					if !dirCreated {
 						continue
 					}
-					err = bucket.UploadFile(
+					err = bucket.PutObjectFromFile(
 						record.GetFullPath(),
 						event.Name,
-						512*1024,
 						oss.Routines(common.UploadThreads),
-						oss.Checkpoint(true, ""),
 					)
 					if err != nil {
 						logger.AppLog.Warn(
+							"Error while uploading:", err)
+						fmt.Println(
 							"Error while uploading:", err)
 						continue
 					}
 					err = client.UploadRecord(record)
 					if err != nil {
 						logger.AppLog.Warn(
+							"Error while recording:", err)
+						fmt.Println(
 							"Error while recording:", err)
 						continue
 					}
