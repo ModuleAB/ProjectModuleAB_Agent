@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	logger.AppLog.Info("ModuleAB agent", common.Version, "starting...")
+	logger.AppLog.Info("ModuleAB agent", version.Version, "starting...")
 	logger.AppLog.Level = logger.StringLevelToInt(
 		conf.AppConfig.GetString("loglevel"),
 	)
