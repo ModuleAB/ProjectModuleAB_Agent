@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
@@ -123,9 +124,24 @@ func (b *BackupManager) Run(h *models.Hosts) {
 
 					ps := strings.Split(path.Dir(record.GetFullPath()), "/")
 					var (
-						dir        string
-						dirCreated = true
+						dir           string
+						lock          sync.Mutex
+						dirCreated    = true
+						isRecoverFile = false
 					)
+					lock.Lock()
+					logger.AppLog.Debug("recoverdFiles is:", recoverdFiles)
+					for k, v := range recoverdFiles {
+						if event.Name == v {
+							recoverdFiles = append(recoverdFiles[:k], recoverdFiles[k+1:]...)
+							isRecoverFile = true
+						}
+					}
+					lock.Unlock()
+					if isRecoverFile {
+						logger.AppLog.Info("File", event.Name, "is recover file.")
+						continue
+					}
 					for _, p := range ps {
 						dir = fmt.Sprintf("%s%s/", dir, p)
 						err = bucket.PutObject(dir, strings.NewReader(""))

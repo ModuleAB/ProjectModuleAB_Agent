@@ -8,11 +8,14 @@ import (
 	"moduleab_server/models"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/gorilla/websocket"
 )
+
+var recoverdFiles []string
 
 func RunWebsocket(h *models.Hosts, apikey, apisecret string) {
 	var err error
@@ -38,43 +41,59 @@ func RunWebsocket(h *models.Hosts, apikey, apisecret string) {
 	}
 	defer conn.Close()
 	logger.AppLog.Info("Websocket established.")
-	conn.SetReadDeadline(time.Now().Add(5 * time.Second))
-	conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	conn.SetWriteDeadline(time.Now().Add(30 * time.Second))
+
 	conn.SetPingHandler(func(appData string) error {
-		conn.SetReadDeadline(time.Now().Add(5 * time.Second))
-		conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+		logger.AppLog.Debug("Got ping:", appData)
+		conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+		conn.SetWriteDeadline(time.Now().Add(30 * time.Second))
 		return conn.WriteControl(websocket.PongMessage, []byte{},
-			time.Now().Add(5*time.Second))
+			time.Now().Add(10*time.Second))
 	})
-	for {
-		msg := make(models.Signal)
-		err = conn.ReadJSON(&msg)
-		if websocket.IsUnexpectedCloseError(err) {
-			return
-		} else if err != nil {
-			logger.AppLog.Warn("Websocket got error:", err.Error())
-			continue
+
+	// ReadRoutine
+	msgChan := make(chan models.Signal, 1024)
+	go func() {
+		logger.AppLog.Debug("Read routine started")
+		for {
+			msg := make(models.Signal)
+			err = conn.ReadJSON(&msg)
+			if websocket.IsUnexpectedCloseError(err) {
+				return
+			} else if err != nil {
+				logger.AppLog.Warn("Websocket got error:", err.Error())
+				continue
+			}
+			logger.AppLog.Debug("Got message:", msg)
+			msgChan <- msg
 		}
-		logger.AppLog.Debug("Got message:", msg)
-		go DoDownload(msg, apikey, apisecret)
-		err = conn.WriteMessage(websocket.TextMessage,
-			[]byte("DONE "+msg["id"].(string)))
-		if websocket.IsUnexpectedCloseError(err) {
-			return
-		} else if err != nil {
-			logger.AppLog.Warn("Websocket got error:", err.Error())
-			continue
+	}()
+
+	for {
+		select {
+		case msg := <-msgChan:
+			go doDownload(msg, apikey, apisecret)
+			err = conn.WriteMessage(websocket.TextMessage,
+				[]byte("DONE "+msg["id"].(string)))
+			if websocket.IsUnexpectedCloseError(err) {
+				return
+			} else if err != nil {
+				logger.AppLog.Warn("Websocket got error:", err.Error())
+			}
 		}
 	}
 }
 
-func DoDownload(s models.Signal, apikey, apisecret string) {
+func doDownload(s models.Signal, apikey, apisecret string) {
+	var lock sync.Mutex
 	var downType int
 	if Type, found := s["type"]; found {
-		if _, ok := Type.(int); ok {
-			downType = Type.(int)
+		if _, ok := Type.(float64); ok {
+			downType = int(Type.(float64))
 		}
 	}
+	logger.AppLog.Debug("Got downType:", downType)
 	if downType == models.SignalTypeDownload {
 		ossclient, err := oss.New(s["endpoint"].(string), apikey, apisecret)
 		if err != nil {
@@ -89,6 +108,9 @@ func DoDownload(s models.Signal, apikey, apisecret string) {
 		localPath := "/" + path.Join(
 			strings.Split(s["path"].(string), "/")[2:]...,
 		)
+		lock.Lock()
+		recoverdFiles = append(recoverdFiles, localPath)
+		lock.Unlock()
 		err = bucket.GetObjectToFile(
 			s["path"].(string),
 			localPath,
