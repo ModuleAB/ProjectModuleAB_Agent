@@ -8,6 +8,7 @@ import (
 	"moduleab_server/models"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/gorilla/websocket"
@@ -37,6 +38,14 @@ func RunWebsocket(h *models.Hosts, apikey, apisecret string) {
 	}
 	defer conn.Close()
 	logger.AppLog.Info("Websocket established.")
+	conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+	conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+	conn.SetPingHandler(func(appData string) error {
+		conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+		conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+		return conn.WriteControl(websocket.PongMessage, []byte{},
+			time.Now().Add(5*time.Second))
+	})
 	for {
 		msg := make(models.Signal)
 		err = conn.ReadJSON(&msg)
@@ -48,7 +57,8 @@ func RunWebsocket(h *models.Hosts, apikey, apisecret string) {
 		}
 		logger.AppLog.Debug("Got message:", msg)
 		go DoDownload(msg, apikey, apisecret)
-		err = conn.WriteMessage(websocket.TextMessage, []byte("DONE"))
+		err = conn.WriteMessage(websocket.TextMessage,
+			[]byte("DONE "+msg["id"].(string)))
 		if websocket.IsUnexpectedCloseError(err) {
 			return
 		} else if err != nil {
