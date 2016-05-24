@@ -36,7 +36,6 @@ func RunWebsocket(h *models.Hosts, apikey, apisecret string) {
 		return
 	}
 	defer conn.Close()
-	defer logger.AppLog.Warn("Websocket got error:", err.Error())
 	logger.AppLog.Info("Websocket established.")
 	for {
 		msg := make(models.Signal)
@@ -44,6 +43,7 @@ func RunWebsocket(h *models.Hosts, apikey, apisecret string) {
 		if websocket.IsUnexpectedCloseError(err) {
 			return
 		} else if err != nil {
+			logger.AppLog.Warn("Websocket got error:", err.Error())
 			continue
 		}
 		logger.AppLog.Debug("Got message:", msg)
@@ -51,6 +51,9 @@ func RunWebsocket(h *models.Hosts, apikey, apisecret string) {
 		err = conn.WriteMessage(websocket.TextMessage, []byte("DONE"))
 		if websocket.IsUnexpectedCloseError(err) {
 			return
+		} else if err != nil {
+			logger.AppLog.Warn("Websocket got error:", err.Error())
+			continue
 		}
 	}
 }
