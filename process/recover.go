@@ -36,21 +36,21 @@ func RunWebsocket(h *models.Hosts, apikey, apisecret string) {
 		return
 	}
 	defer conn.Close()
+	defer logger.AppLog.Warn("Websocket got error:", err.Error())
 	logger.AppLog.Info("Websocket established.")
 	for {
 		msg := make(models.Signal)
-		err := conn.ReadJSON(&msg)
+		err = conn.ReadJSON(&msg)
 		if websocket.IsUnexpectedCloseError(err) {
 			return
-		} else {
+		} else if err != nil {
 			continue
 		}
+		logger.AppLog.Debug("Got message:", msg)
 		go DoDownload(msg, apikey, apisecret)
 		err = conn.WriteMessage(websocket.TextMessage, []byte("DONE"))
 		if websocket.IsUnexpectedCloseError(err) {
 			return
-		} else {
-			continue
 		}
 	}
 }
