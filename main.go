@@ -15,6 +15,17 @@ import (
 
 func main() {
 	logger.Init()
+	defer func() {
+		x := recover()
+		if x != nil {
+			logger.AppLog.Error("Got fatal error:", x)
+			var stack = make([]byte, 0)
+			runtime.Stack(stack, true)
+			logger.AppLog.Error("Stack trace:\n", string(stack))
+			os.Exit(1)
+		}
+	}()
+
 	logger.AppLog.Info("ModuleAB agent", version.Version, "starting...")
 	logger.AppLog.Level = logger.StringLevelToInt(
 		conf.AppConfig.GetString("loglevel"),
@@ -33,16 +44,6 @@ func main() {
 	)
 	logger.AppLog.Debug("Got config", c.ApiKey, c.ApiSecret)
 	run(c)
-	defer func() {
-		x := recover()
-		if x != nil {
-			logger.AppLog.Error("Got fatal error:", x)
-			var stack = make([]byte, 0)
-			runtime.Stack(stack, true)
-			logger.AppLog.Error("Stack trace:\n", string(stack))
-			os.Exit(1)
-		}
-	}()
 }
 
 func run(c *client.AliConfig) {
