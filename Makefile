@@ -1,6 +1,9 @@
 all: build pack rmbuild
 
 build:
+	go build -ldflags "-s -w"
+
+build_debug:
 	go build
 
 pack:
