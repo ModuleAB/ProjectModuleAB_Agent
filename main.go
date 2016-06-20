@@ -16,16 +16,6 @@ import (
 
 func main() {
 	logger.Init()
-	defer func() {
-		x := recover()
-		if x != nil {
-			logger.AppLog.Error("Got fatal error:", x)
-			var stack = make([]byte, 0)
-			runtime.Stack(stack, true)
-			logger.AppLog.Error("Stack trace:\n", string(stack))
-			os.Exit(1)
-		}
-	}()
 
 	logger.AppLog.Info("ModuleAB agent", version.Version, "starting...")
 	logger.AppLog.Level = logger.StringLevelToInt(
@@ -57,6 +47,16 @@ func main() {
 }
 
 func run(c *client.AliConfig) {
+	defer func() {
+		x := recover()
+		if x != nil {
+			logger.AppLog.Error("Got fatal error:", x)
+			var stack = make([]byte, 0)
+			runtime.Stack(stack, true)
+			logger.AppLog.Error("Stack trace:\n", string(stack))
+			os.Exit(1)
+		}
+	}()
 	d, err := client.RegisterHost()
 	if err != nil {
 		logger.AppLog.Debug("Got Error:", err)
