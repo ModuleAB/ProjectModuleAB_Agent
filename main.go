@@ -10,6 +10,7 @@ import (
 	"moduleab_agent/process"
 	"moduleab_server/version"
 	"os"
+	"os/signal"
 	"runtime"
 )
 
@@ -43,6 +44,15 @@ func main() {
 		0600,
 	)
 	logger.AppLog.Debug("Got config", c.ApiKey, c.ApiSecret)
+	var sig chan os.Signal
+	signal.Notify(sig)
+	go func() {
+		select {
+		case s := <-sig:
+			logger.AppLog.Error("Got signal:", s.String(), "go exit...")
+			os.Exit(1)
+		}
+	}()
 	run(c)
 }
 
