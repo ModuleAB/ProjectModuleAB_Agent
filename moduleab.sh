@@ -6,8 +6,15 @@ EXEC='./moduleab_agent'
 
 cd $DIR
 
+function run() {
+  while true
+  do
+    $EXEC
+  done
+}
+
 function start(){
-  setsid $EXEC &
+  setsid run &
   echo "ModuleAB Agent Started."
 }
 
