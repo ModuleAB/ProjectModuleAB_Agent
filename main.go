@@ -51,7 +51,7 @@ func run(c *client.AliConfig) {
 		x := recover()
 		if x != nil {
 			logger.AppLog.Error("Got fatal error:", x)
-			var stack = make([]byte, 0)
+			var stack = make([]byte, 2<<10)
 			runtime.Stack(stack, true)
 			logger.AppLog.Error("Stack trace:\n", string(stack))
 			os.Exit(1)
