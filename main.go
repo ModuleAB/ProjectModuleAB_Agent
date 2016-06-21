@@ -34,7 +34,7 @@ func main() {
 		0600,
 	)
 	logger.AppLog.Debug("Got config", c.ApiKey, c.ApiSecret)
-	var sig chan os.Signal
+	var sig = make(chan os.Signal, 1024)
 	signal.Notify(sig)
 	go func() {
 		select {
