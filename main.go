@@ -26,7 +26,7 @@ func main() {
 	logger.AppLog.Debug("Got login key:", common.LoginKey)
 	c, err := client.GetAliConfig()
 	if err != nil {
-		logger.AppLog.Debug("Got Error:", err)
+		logger.AppLog.Fatal("Got Error:", err)
 		os.Exit(1)
 	}
 	ioutil.WriteFile(
@@ -36,7 +36,7 @@ func main() {
 	)
 	logger.AppLog.Debug("Got config", c.ApiKey, c.ApiSecret)
 	var sig = make(chan os.Signal, 1024)
-	signal.Notify(sig)
+	signal.Notify(sig, os.Interrupt, os.Kill)
 	go run(c)
 	logger.AppLog.Info("Now monitor system signal...")
 	for {
