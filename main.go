@@ -36,7 +36,12 @@ func main() {
 	logger.AppLog.Debug("Got config", c.ApiKey, c.ApiSecret)
 	var sig = make(chan os.Signal, 1024)
 	signal.Notify(sig, os.Interrupt, os.Kill)
-	go run(c)
+	go func() {
+		for {
+			run(c)
+			logger.AppLog.Error("Main thread crashed, restarting...")
+		}
+	}()
 	logger.AppLog.Info("Now monitor system signal...")
 	for {
 		select {
@@ -55,7 +60,6 @@ func run(c *client.AliConfig) {
 			var stack = make([]byte, 2<<10)
 			runtime.Stack(stack, true)
 			logger.AppLog.Error("Stack trace:\n", string(stack))
-			os.Exit(1)
 		}
 	}()
 	d, err := client.RegisterHost()
