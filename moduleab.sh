@@ -14,7 +14,8 @@ function run() {
 }
 
 function start(){
-  setsid run &
+  run &
+  disown
   echo "ModuleAB Agent Started."
 }
 
@@ -29,7 +30,7 @@ function restart(){
   start
 }
 
-if [ 'x' = "${1}x"]; then
+if [ 'x' = "${1}x" ]; then
   echo "$0 {start|stop|restart}"
 else
   $1
