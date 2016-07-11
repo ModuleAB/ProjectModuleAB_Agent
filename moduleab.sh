@@ -20,6 +20,10 @@ function start(){
 }
 
 function stop(){
+  PPID=`cat /proc/$(cat $PIDFILE)/status|grep PPid|awk '{print $2}'`
+  if [ '1' != "$PPID" ];then
+    kill $PPID
+  fi
   kill `cat $PIDFILE`
   echo "ModuleAB Agent Stopped."
 }
