@@ -94,7 +94,11 @@ func run(c *client.AliConfig) {
 		r.Update(d)
 	}
 	logger.AppLog.Info("Starting recover manager...")
-	go process.RunWebsocket(d, c.ApiKey, c.ApiSecret)
+	go func() {
+		for {
+			process.RunWebsocket(d, c.ApiKey, c.ApiSecret)
+		}
+	}()
 	logger.AppLog.Info("Starting backup manager...")
 	b.Update(d.Paths)
 	b.Run(d)
