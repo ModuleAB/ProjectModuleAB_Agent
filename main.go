@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"time"
 )
 
 func main() {
@@ -97,6 +98,7 @@ func run(c *client.AliConfig) {
 	go func() {
 		for {
 			process.RunWebsocket(d, c.ApiKey, c.ApiSecret)
+			time.Sleep(5 * time.Second)
 		}
 	}()
 	logger.AppLog.Info("Starting backup manager...")
