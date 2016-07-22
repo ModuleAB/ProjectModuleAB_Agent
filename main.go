@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"time"
 )
 
 func main() {
@@ -95,7 +96,12 @@ func run(c *client.AliConfig) {
 		r.Update(d)
 	}
 	logger.AppLog.Info("Starting recover manager...")
-	go process.RunWebsocket(d, c.ApiKey, c.ApiSecret)
+	go func() {
+		for {
+			process.RunWebsocket(d, c.ApiKey, c.ApiSecret)
+			time.Sleep(5 * time.Second)
+		}
+	}()
 	logger.AppLog.Info("Starting backup manager...")
 	b.Update(d.Paths)
 	b.Run(d)
