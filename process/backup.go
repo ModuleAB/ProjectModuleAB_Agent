@@ -90,7 +90,7 @@ func (b *BackupManager) Run(h *models.Hosts) {
 					continue
 				}
 				if strings.HasPrefix(filename, v.Path) {
-					go b.doBackup(v, filename, h, event.Name)
+					b.doBackup(v, filename, h, event.Name)
 				}
 			}
 		}
