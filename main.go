@@ -10,7 +10,6 @@ import (
 	"moduleab_agent/process"
 	"moduleab_server/version"
 	"os"
-	"os/signal"
 	"runtime"
 	"time"
 )
@@ -35,21 +34,10 @@ func main() {
 		0600,
 	)
 	logger.AppLog.Debug("Got config", c.ApiKey, c.ApiSecret)
-	var sig = make(chan os.Signal, 1024)
-	signal.Notify(sig, os.Interrupt, os.Kill)
-	go func() {
-		for {
-			run(c)
-			logger.AppLog.Error("Main thread crashed, restarting...")
-		}
-	}()
-	logger.AppLog.Info("Now monitor system signal...")
+
 	for {
-		select {
-		case s := <-sig:
-			logger.AppLog.Error("Got signal:", s.String(), "go exit...")
-			os.Exit(1)
-		}
+		run(c)
+		logger.AppLog.Error("Main thread crashed, restarting...")
 	}
 }
 
