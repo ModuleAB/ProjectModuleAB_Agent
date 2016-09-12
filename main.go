@@ -15,6 +15,12 @@ import (
 )
 
 func main() {
+	ioutil.WriteFile(
+		conf.AppConfig.GetString("pidfile"),
+		[]byte(fmt.Sprint(os.Getpid())),
+		0600,
+	)
+
 	logger.Init()
 
 	logger.AppLog.Info("ModuleAB agent", version.Version, "starting...")
@@ -28,11 +34,6 @@ func main() {
 		logger.AppLog.Fatal("Got Error:", err)
 		os.Exit(1)
 	}
-	ioutil.WriteFile(
-		conf.AppConfig.GetString("pidfile"),
-		[]byte(fmt.Sprint(os.Getpid())),
-		0600,
-	)
 	logger.AppLog.Debug("Got config", c.ApiKey, c.ApiSecret)
 
 	for {
