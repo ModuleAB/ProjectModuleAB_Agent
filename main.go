@@ -20,6 +20,10 @@ func main() {
 		[]byte(fmt.Sprint(os.Getpid())),
 		0600,
 	)
+	timeout, err := conf.AppConfig.GetInt("timeout")
+	if err == nil {
+		client.StdHttp.Timeout = time.Duration(timeout) * time.Second
+	}
 
 	logger.Init()
 
