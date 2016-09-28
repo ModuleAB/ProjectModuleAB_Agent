@@ -56,6 +56,7 @@ func GetHost(hostname string) (*models.Hosts, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	switch resp.StatusCode {
 	case http.StatusNotFound:
 		return nil, nil
@@ -116,6 +117,7 @@ func AddHost(h *models.Hosts) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	switch resp.StatusCode {
 	case http.StatusForbidden:
 		e := make(map[string]string)

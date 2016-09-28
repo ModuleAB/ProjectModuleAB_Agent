@@ -23,6 +23,7 @@ func UploadRecord(r *models.Records) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	switch resp.StatusCode {
 	case http.StatusForbidden:
 		e := make(map[string]string)
@@ -76,6 +77,7 @@ func CheckRecords(record *models.Records) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer resp.Body.Close()
 	switch resp.StatusCode {
 	case http.StatusForbidden:
 		e := make(map[string]string)
