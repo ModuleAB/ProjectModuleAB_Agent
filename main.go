@@ -91,6 +91,7 @@ func run(c *client.AliConfig) {
 	go func() {
 		for {
 			process.RunWebsocket(d, c.ApiKey, c.ApiSecret)
+			logger.AppLog.Error("Connection to server is closed, reconnect.")
 			time.Sleep(5 * time.Second)
 		}
 	}()

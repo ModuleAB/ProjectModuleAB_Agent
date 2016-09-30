@@ -16,6 +16,7 @@ import (
 	"golang.org/x/exp/inotify"
 )
 
+// BackupManager module
 type BackupManager struct {
 	JobList []string
 	client.AliConfig
@@ -23,6 +24,7 @@ type BackupManager struct {
 	host    *models.Hosts
 }
 
+// NewBackupManager is to create a new `BackupManager` instance
 func NewBackupManager(config client.AliConfig) (*BackupManager, error) {
 	var err error
 	b := new(BackupManager)
@@ -35,6 +37,7 @@ func NewBackupManager(config client.AliConfig) (*BackupManager, error) {
 	return b, nil
 }
 
+// Update is to configure `BackupManager` instance with path to be monitored.
 func (b *BackupManager) Update(ps []*models.Paths) error {
 	for _, v := range ps {
 		found := false
@@ -77,6 +80,7 @@ func (b *BackupManager) Update(ps []*models.Paths) error {
 	return nil
 }
 
+// Run is to start `BackupManager` instance.
 func (b *BackupManager) Run(h *models.Hosts) {
 	logger.AppLog.Info("Backup process started.")
 	for {
@@ -90,7 +94,7 @@ func (b *BackupManager) Run(h *models.Hosts) {
 					continue
 				}
 				if strings.HasPrefix(filename, v.Path) {
-					b.doBackup(v, filename, h, event.Name)
+					go b.doBackup(v, filename, h, event.Name)
 				}
 			}
 		}

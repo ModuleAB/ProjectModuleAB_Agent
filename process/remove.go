@@ -10,17 +10,20 @@ import (
 	"time"
 )
 
+// RemoveManager module
 type RemoveManager struct {
 	JobList    []string
 	JobChannel map[string]chan int
 }
 
+// NewRemoveManager is to create new `RemoveManager` instance
 func NewRemoveManager() *RemoveManager {
 	r := new(RemoveManager)
 	r.JobList = make([]string, 0)
 	return r
 }
 
+// Update is to configure `RemoveManager` settings.
 func (r *RemoveManager) Update(h *models.Hosts) error {
 	ps := h.Paths
 	for _, v := range ps {
@@ -60,6 +63,7 @@ func (r *RemoveManager) Update(h *models.Hosts) error {
 	return nil
 }
 
+// Run is to start `RemoveManager`
 func (r *RemoveManager) Run(
 	period, reserve int,
 	mpath *models.Paths,

@@ -16,6 +16,7 @@ const (
 	LogLevelFatal
 )
 
+// Logger module
 type Logger struct {
 	log.Logger
 	Level int
@@ -26,6 +27,7 @@ func (l *Logger) out(level string, v interface{}) {
 	l.Println(interfaceToLog(v))
 }
 
+// Debug is loglevel Debug
 func (l *Logger) Debug(v ...interface{}) {
 	if l.Level <= LogLevelDebug {
 		l.out("Debug\t", v)
@@ -64,8 +66,10 @@ func (l *Logger) Fatal(v ...interface{}) {
 	}
 }
 
+// AppLog is default log instance
 var AppLog Logger
 
+// Init is to configure log module
 func Init() {
 	w, err := os.OpenFile(
 		consts.DefaultLogFile,
@@ -84,6 +88,7 @@ func Init() {
 	AppLog.Level = LogLevelInformation
 }
 
+// StringLevelToInt is to convert string log level to internal code.
 func StringLevelToInt(l string) int {
 	switch l {
 	case "deb":
