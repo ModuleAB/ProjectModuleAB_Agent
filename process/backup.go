@@ -16,21 +16,28 @@ import (
 	"golang.org/x/exp/inotify"
 )
 
+const (
+	// UseLowMemoryMode should open running with memory < 1G
+	UseLowMemoryMode = true
+)
+
 // BackupManager module
 type BackupManager struct {
 	JobList []string
 	client.AliConfig
-	Watcher *inotify.Watcher
-	host    *models.Hosts
+	Watcher       *inotify.Watcher
+	host          *models.Hosts
+	LowMemoryMode bool
 }
 
 // NewBackupManager is to create a new `BackupManager` instance
-func NewBackupManager(config client.AliConfig) (*BackupManager, error) {
+func NewBackupManager(config client.AliConfig, lowmemory bool) (*BackupManager, error) {
 	var err error
 	b := new(BackupManager)
 	b.JobList = make([]string, 0)
 	b.AliConfig = config
 	b.Watcher, err = inotify.NewWatcher()
+	b.LowMemoryMode = lowmemory
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +101,11 @@ func (b *BackupManager) Run(h *models.Hosts) {
 					continue
 				}
 				if strings.HasPrefix(filename, v.Path) {
-					go b.doBackup(v, filename, h, event.Name)
+					if b.LowMemoryMode {
+						b.doBackup(v, filename, h, event.Name)
+					} else {
+						go b.doBackup(v, filename, h, event.Name)
+					}
 				}
 			}
 		}
