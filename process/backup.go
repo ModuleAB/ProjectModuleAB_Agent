@@ -123,7 +123,7 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 		logger.AppLog.Warn("No BackupSet or AppSet got, skip")
 		return
 	}
-	_, file := path.Split(filename)
+	_, file := path.Split(strings.TrimSpace(filename))
 	record := &models.Records{
 		Filename:   file,
 		Host:       h,
@@ -192,7 +192,7 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 			continue
 		}
 		err = bucket.PutObjectFromFile(
-			strings.TrimSpace(record.GetFullPath()),
+			record.GetFullPath(),
 			eName,
 			oss.Routines(common.UploadThreads),
 		)
