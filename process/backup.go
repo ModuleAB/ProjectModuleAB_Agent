@@ -112,6 +112,12 @@ func (b *BackupManager) Run(h *models.Hosts) {
 	}
 }
 
+/* Params:
+ * 	v *models.Paths
+ *  filename string -- file full path
+ *	h *models.Hosts
+ *	eName string -- file path from inotify
+ */
 func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hosts, eName string) {
 	if v.BackupSet == nil {
 		logger.AppLog.Warn("No BackupSet or AppSet got, skip")
@@ -186,7 +192,7 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 			continue
 		}
 		err = bucket.PutObjectFromFile(
-			record.GetFullPath(),
+			strings.TrimSpace(record.GetFullPath()),
 			eName,
 			oss.Routines(common.UploadThreads),
 		)
