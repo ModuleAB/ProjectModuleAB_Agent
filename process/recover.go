@@ -17,6 +17,7 @@ import (
 
 var recoverdFiles []string
 
+// RunWebsocket is to receive messages from server realtime.
 func RunWebsocket(h *models.Hosts, apikey, apisecret string) {
 	var err error
 	defer logger.AppLog.Warn("Websocket got error:", err)

@@ -16,25 +16,35 @@ import (
 	"golang.org/x/exp/inotify"
 )
 
+const (
+	// UseLowMemoryMode should open running with memory < 1G
+	UseLowMemoryMode = true
+)
+
+// BackupManager module
 type BackupManager struct {
 	JobList []string
 	client.AliConfig
-	Watcher *inotify.Watcher
-	host    *models.Hosts
+	Watcher       *inotify.Watcher
+	host          *models.Hosts
+	LowMemoryMode bool
 }
 
-func NewBackupManager(config client.AliConfig) (*BackupManager, error) {
+// NewBackupManager is to create a new `BackupManager` instance
+func NewBackupManager(config client.AliConfig, lowmemory bool) (*BackupManager, error) {
 	var err error
 	b := new(BackupManager)
 	b.JobList = make([]string, 0)
 	b.AliConfig = config
 	b.Watcher, err = inotify.NewWatcher()
+	b.LowMemoryMode = lowmemory
 	if err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
+// Update is to configure `BackupManager` instance with path to be monitored.
 func (b *BackupManager) Update(ps []*models.Paths) error {
 	for _, v := range ps {
 		found := false
@@ -77,6 +87,7 @@ func (b *BackupManager) Update(ps []*models.Paths) error {
 	return nil
 }
 
+// Run is to start `BackupManager` instance.
 func (b *BackupManager) Run(h *models.Hosts) {
 	logger.AppLog.Info("Backup process started.")
 	for {
@@ -90,19 +101,29 @@ func (b *BackupManager) Run(h *models.Hosts) {
 					continue
 				}
 				if strings.HasPrefix(filename, v.Path) {
-					b.doBackup(v, filename, h, event.Name)
+					if b.LowMemoryMode {
+						b.doBackup(v, filename, h, event.Name)
+					} else {
+						go b.doBackup(v, filename, h, event.Name)
+					}
 				}
 			}
 		}
 	}
 }
 
+/* Params:
+ * 	v *models.Paths
+ *  filename string -- file full path
+ *	h *models.Hosts
+ *	eName string -- file path from inotify
+ */
 func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hosts, eName string) {
 	if v.BackupSet == nil {
 		logger.AppLog.Warn("No BackupSet or AppSet got, skip")
 		return
 	}
-	_, file := path.Split(filename)
+	_, file := path.Split(strings.TrimSpace(filename))
 	record := &models.Records{
 		Filename:   file,
 		Host:       h,

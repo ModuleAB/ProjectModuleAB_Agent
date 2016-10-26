@@ -38,7 +38,7 @@ func (c Config) parse(b []byte) {
 func (c Config) Get(key string) (interface{}, error) {
 	v, ok := c[key]
 	if !ok {
-		return nil, fmt.Errorf("Key", key, "not found.")
+		return nil, fmt.Errorf("Key '%s' not found.", key)
 	}
 	return v, nil
 }
@@ -62,6 +62,18 @@ func (c Config) GetString(key string) string {
 		return ""
 	}
 	return s
+}
+
+func (c Config) GetBool(key string) bool {
+	v, _ := c.Get(key)
+	s, ok := v.(string)
+	if !ok {
+		return false
+	}
+	if strings.ToLower(s) == "true" {
+		return true
+	}
+	return false
 }
 
 var AppConfig Config
