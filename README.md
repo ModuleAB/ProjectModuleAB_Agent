@@ -26,4 +26,6 @@ loginkey=guess?
 loglevel=debug
 uploadthreads=5
 pidfile=moduleab.pid
+# if you have a machine has memory < 1G, try set this true.
+lowmemorymode=true
 ```
