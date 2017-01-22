@@ -3,9 +3,10 @@ package logger
 import (
 	"fmt"
 	"log"
-	"moduleab_agent/consts"
 	"os"
 	"strings"
+
+	"github.com/ModuleAB/ModuleAB/agent/consts"
 )
 
 const (

@@ -5,7 +5,8 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
-	"moduleab_agent/common"
+
+	"github.com/ModuleAB/ModuleAB/agent/common"
 )
 
 func GetSignature(date, url string) string {

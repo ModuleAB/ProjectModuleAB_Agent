@@ -3,9 +3,10 @@ package conf
 import (
 	"fmt"
 	"io/ioutil"
-	"moduleab_agent/consts"
 	"os"
 	"strings"
+
+	"github.com/ModuleAB/ModuleAB/agent/consts"
 )
 
 type Config map[string]interface{}

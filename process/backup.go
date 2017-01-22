@@ -2,15 +2,16 @@ package process
 
 import (
 	"fmt"
-	"moduleab_agent/client"
-	"moduleab_agent/common"
-	"moduleab_agent/logger"
-	"moduleab_server/models"
 	"path"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ModuleAB/ModuleAB/agent/client"
+	"github.com/ModuleAB/ModuleAB/agent/common"
+	"github.com/ModuleAB/ModuleAB/agent/logger"
+	"github.com/ModuleAB/ModuleAB/server/models"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"golang.org/x/exp/inotify"

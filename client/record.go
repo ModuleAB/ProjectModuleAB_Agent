@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"moduleab_server/models"
 	"net/http"
+
+	"github.com/ModuleAB/ModuleAB/server/models"
 )
 
 func UploadRecord(r *models.Records) error {

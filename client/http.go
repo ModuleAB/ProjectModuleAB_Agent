@@ -3,10 +3,11 @@ package client
 import (
 	"fmt"
 	"io"
-	"moduleab_agent/auth"
-	"moduleab_agent/common"
 	"net/http"
 	"time"
+
+	"github.com/ModuleAB/ModuleAB/agent/auth"
+	"github.com/ModuleAB/ModuleAB/agent/common"
 )
 
 var StdHttp *http.Client

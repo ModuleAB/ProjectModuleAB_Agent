@@ -2,7 +2,8 @@ package common
 
 import (
 	"flag"
-	"moduleab_agent/conf"
+
+	"github.com/ModuleAB/ModuleAB/agent/conf"
 )
 
 var (
