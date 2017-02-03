@@ -1,7 +1,7 @@
 all: build pack rmbuild
 
 build:
-	go build -ldflags "-s -w"
+	go build -ldflags "-s -w" -o moduleab_agent
 
 build_debug:
 	go build
