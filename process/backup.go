@@ -120,6 +120,15 @@ func (b *BackupManager) Run(h *models.Hosts) {
  *	eName string -- file path from inotify
  */
 func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hosts, eName string) {
+	defer func() {
+		x := recover()
+		if x != nil {
+			logger.AppLog.Warn(
+				fmt.Sprintf("Error While Uploading \"%s\", for reason %v", filename, x),
+			)
+		}
+	}()
+
 	if v.BackupSet == nil {
 		logger.AppLog.Warn("No BackupSet or AppSet got, skip")
 		return
