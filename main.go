@@ -3,6 +3,14 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"syscall"
+	"time"
+
 	"github.com/ModuleAB/ModuleAB/agent/client"
 	"github.com/ModuleAB/ModuleAB/agent/common"
 	"github.com/ModuleAB/ModuleAB/agent/conf"
@@ -10,12 +18,6 @@ import (
 	"github.com/ModuleAB/ModuleAB/agent/process"
 	"github.com/ModuleAB/ModuleAB/server/models"
 	"github.com/ModuleAB/ModuleAB/server/version"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"runtime"
-	"strconv"
-	"time"
 )
 
 func daemonStop() {
@@ -52,6 +54,22 @@ func showHelp() {
 	fmt.Println("\t\thelp: Show this help.")
 }
 
+func lockFile() error {
+	fd, err := os.OpenFile(
+		conf.AppConfig.GetString("lockfile"),
+		os.O_RDWR|os.O_CREATE,
+		0600,
+	)
+	if err != nil {
+		return err
+	}
+	err = syscall.Flock(int(fd.Fd()), syscall.LOCK_EX)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 	timeout, err := conf.AppConfig.GetInt("timeout")
 	if err == nil {
@@ -84,6 +102,16 @@ func main() {
 		os.Exit(0)
 	}
 
+	err = lockFile()
+	if err != nil {
+		fmt.Println("Lock Existed, exit.")
+		os.Exit(1)
+	}
+
+	_, err = syscall.Setsid()
+	if err != nil {
+		fmt.Println("Call setsid() failed.")
+	}
 	ioutil.WriteFile(
 		conf.AppConfig.GetString("pidfile"),
 		[]byte(fmt.Sprint(os.Getpid())),
