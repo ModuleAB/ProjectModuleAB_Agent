@@ -2,14 +2,15 @@ package process
 
 import (
 	"fmt"
+	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/ModuleAB/ModuleAB/agent/client"
-	"github.com/ModuleAB/ModuleAB/agent/common"
 	"github.com/ModuleAB/ModuleAB/agent/logger"
 	"github.com/ModuleAB/ModuleAB/server/models"
 
@@ -20,6 +21,8 @@ import (
 const (
 	// UseLowMemoryMode should open running with memory < 1G
 	UseLowMemoryMode = true
+	// Will use gzip
+	UseCompress = true
 )
 
 // BackupManager module
@@ -29,16 +32,18 @@ type BackupManager struct {
 	Watcher       *inotify.Watcher
 	host          *models.Hosts
 	LowMemoryMode bool
+	Compress      bool
 }
 
 // NewBackupManager is to create a new `BackupManager` instance
-func NewBackupManager(config client.AliConfig, lowmemory bool) (*BackupManager, error) {
+func NewBackupManager(config client.AliConfig, lowmemory bool, compress bool) (*BackupManager, error) {
 	var err error
 	b := new(BackupManager)
 	b.JobList = make([]string, 0)
 	b.AliConfig = config
 	b.Watcher, err = inotify.NewWatcher()
 	b.LowMemoryMode = lowmemory
+	b.Compress = compress
 	if err != nil {
 		return nil, err
 	}
@@ -134,6 +139,20 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 		return
 	}
 	_, file := path.Split(strings.TrimSpace(filename))
+
+	if b.Compress {
+		if !regexp.MustCompile("\\.gz$|\\.zip$|\\.tgz$|\\.bz2").MatchString(eName) {
+            gz := exec.Command("gzip", eName)
+			err := gz.Run()
+			if err != nil {
+				logger.AppLog.Warn(eName, "Compress Failed.")
+			} else {
+				logger.AppLog.Debug(eName, " Will upload compressed file.")
+				return
+			}
+		}
+	}
+
 	record := &models.Records{
 		Filename:   file,
 		Host:       h,
@@ -184,8 +203,8 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 	for delay := 0; delay <= 50; delay += 10 {
 		if delay > 0 {
 			logger.AppLog.Info("Retry in", delay, "Minutes")
+			time.Sleep(time.Duration(delay) * time.Minute)
 		}
-		time.Sleep(time.Duration(delay) * time.Minute)
 		for _, p := range ps {
 			dir = fmt.Sprintf("%s%s/", dir, p)
 			err = bucket.PutObject(dir, strings.NewReader(""))
@@ -201,10 +220,11 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 		if !dirCreated {
 			continue
 		}
-		err = bucket.PutObjectFromFile(
+
+		err = bucket.UploadFile(
 			record.GetFullPath(),
 			eName,
-			oss.Routines(common.UploadThreads),
+			100 * 1024 * 1024,
 		)
 		if err != nil {
 			logger.AppLog.Warn(
