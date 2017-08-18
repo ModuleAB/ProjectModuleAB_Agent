@@ -2,6 +2,7 @@ package process
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
@@ -139,10 +140,11 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 		return
 	}
 	_, file := path.Split(strings.TrimSpace(filename))
+	file = time.Now().Format('2006/01/02')+"/"+file
 
 	if b.Compress {
 		if !regexp.MustCompile("\\.gz$|\\.zip$|\\.tgz$|\\.bz2").MatchString(eName) {
-            gz := exec.Command("gzip", eName)
+			gz := exec.Command("gzip", eName)
 			err := gz.Run()
 			if err != nil {
 				logger.AppLog.Warn(eName, "Compress Failed.")
@@ -224,7 +226,7 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 		err = bucket.UploadFile(
 			record.GetFullPath(),
 			eName,
-			100 * 1024 * 1024,
+			100*1024*1024,
 		)
 		if err != nil {
 			logger.AppLog.Warn(
@@ -232,6 +234,13 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 			fmt.Println(
 				"Error while uploading:", err)
 			continue
+		}
+		if strings.HasPrefix(eName, ".gz") {
+			err := os.Remove(eName)
+			logger.AppLog.Warn(
+				"Error while removing:", err)
+			fmt.Println(
+				"Error while removing:", err)
 		}
 		err = client.UploadRecord(record)
 		if err != nil {
@@ -244,4 +253,8 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 		return
 	}
 	logger.AppLog.Warn("Backup file:", eName, "Failed.")
+	err := client.FailLog(h.Name, eName)
+	if err != nil {
+		logger.AppLog.Warn("Upload FailLog failed:", err)
+	}
 }
