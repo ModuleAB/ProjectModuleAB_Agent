@@ -34,10 +34,11 @@ type BackupManager struct {
 	host          *models.Hosts
 	LowMemoryMode bool
 	Compress      bool
+	PreserveFile  bool
 }
 
 // NewBackupManager is to create a new `BackupManager` instance
-func NewBackupManager(config client.AliConfig, lowmemory bool, compress bool) (*BackupManager, error) {
+func NewBackupManager(config client.AliConfig, lowmemory bool, compress bool, preservefile bool) (*BackupManager, error) {
 	var err error
 	b := new(BackupManager)
 	b.JobList = make([]string, 0)
@@ -45,6 +46,7 @@ func NewBackupManager(config client.AliConfig, lowmemory bool, compress bool) (*
 	b.Watcher, err = inotify.NewWatcher()
 	b.LowMemoryMode = lowmemory
 	b.Compress = compress
+	b.PreserveFile = preservefile
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +142,7 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 		return
 	}
 	_, file := path.Split(strings.TrimSpace(filename))
-	file = time.Now().Format('2006/01/02')+"/"+file
+	file = time.Now().Format("2006/01/02") + "/" + file
 
 	if b.Compress {
 		if !regexp.MustCompile("\\.gz$|\\.zip$|\\.tgz$|\\.bz2").MatchString(eName) {
@@ -235,7 +237,7 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 				"Error while uploading:", err)
 			continue
 		}
-		if strings.HasPrefix(eName, ".gz") {
+		if strings.HasPrefix(eName, ".gz") && !b.PreserveFile {
 			err := os.Remove(eName)
 			logger.AppLog.Warn(
 				"Error while removing:", err)
@@ -253,7 +255,7 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 		return
 	}
 	logger.AppLog.Warn("Backup file:", eName, "Failed.")
-	err := client.FailLog(h.Name, eName)
+	err = client.FailLog(h.Name, eName)
 	if err != nil {
 		logger.AppLog.Warn("Upload FailLog failed:", err)
 	}

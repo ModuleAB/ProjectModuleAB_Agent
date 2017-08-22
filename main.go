@@ -227,7 +227,7 @@ func run(c *client.AliConfig) {
 			time.Sleep(5 * time.Second)
 		}
 	}()
-	b, err := process.NewBackupManager(*c, conf.AppConfig.GetBool("lowmemorymode"), conf.AppConfig.GetBool("compress"))
+	b, err := process.NewBackupManager(*c, conf.AppConfig.GetBool("lowmemorymode"), conf.AppConfig.GetBool("compress"), conf.AppConfig.GetBool("preservefile"))
 	if err != nil {
 		logger.AppLog.Warn("Got error while making backup manager:", err)
 		fmt.Println("Got error while making backup manager:", err)
