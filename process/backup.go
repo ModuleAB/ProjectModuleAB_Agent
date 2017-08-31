@@ -237,7 +237,7 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 				"Error while uploading:", err)
 			continue
 		}
-		if strings.HasPrefix(eName, ".gz") && !b.PreserveFile {
+		if strings.HasSuffix(eName, ".gz") && !b.PreserveFile {
 			err := os.Remove(eName)
 			logger.AppLog.Warn(
 				"Error while removing:", err)
@@ -255,7 +255,7 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 		return
 	}
 	logger.AppLog.Warn("Backup file:", eName, "Failed.")
-	err = client.FailLog(h.Name, eName)
+	err = client.FailLog(h, eName)
 	if err != nil {
 		logger.AppLog.Warn("Upload FailLog failed:", err)
 	}

@@ -125,12 +125,10 @@ func CheckRecords(record *models.Records) (bool, error) {
 	return false, nil
 }
 
-func FailLog(host, filename string) error {
+func FailLog(host *models.Hosts, filename string) error {
 	failLog := &models.FailLog{
-		Log: fmt.Sprint("Backup file filed:", filename),
-		Host: &models.Hosts{
-			Name: host,
-		},
+		Log:  fmt.Sprint("Backup file filed:", filename),
+		Host: host,
 	}
 	b, err := json.Marshal(failLog)
 	if err != nil {
