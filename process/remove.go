@@ -2,12 +2,13 @@ package process
 
 import (
 	"io/ioutil"
-	"moduleab_agent/client"
-	"moduleab_agent/logger"
-	"moduleab_server/models"
 	"os"
 	"path"
 	"time"
+
+	"github.com/ModuleAB/ModuleAB/agent/client"
+	"github.com/ModuleAB/ModuleAB/agent/logger"
+	"github.com/ModuleAB/ModuleAB/server/models"
 )
 
 // RemoveManager module

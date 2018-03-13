@@ -2,15 +2,18 @@ package process
 
 import (
 	"fmt"
-	"moduleab_agent/client"
-	"moduleab_agent/common"
-	"moduleab_agent/logger"
-	"moduleab_server/models"
+	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ModuleAB/ModuleAB/agent/client"
+	"github.com/ModuleAB/ModuleAB/agent/logger"
+	"github.com/ModuleAB/ModuleAB/server/models"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"golang.org/x/exp/inotify"
@@ -19,6 +22,8 @@ import (
 const (
 	// UseLowMemoryMode should open running with memory < 1G
 	UseLowMemoryMode = true
+	// Will use gzip
+	UseCompress = true
 )
 
 // BackupManager module
@@ -28,16 +33,20 @@ type BackupManager struct {
 	Watcher       *inotify.Watcher
 	host          *models.Hosts
 	LowMemoryMode bool
+	Compress      bool
+	PreserveFile  bool
 }
 
 // NewBackupManager is to create a new `BackupManager` instance
-func NewBackupManager(config client.AliConfig, lowmemory bool) (*BackupManager, error) {
+func NewBackupManager(config client.AliConfig, lowmemory bool, compress bool, preservefile bool) (*BackupManager, error) {
 	var err error
 	b := new(BackupManager)
 	b.JobList = make([]string, 0)
 	b.AliConfig = config
 	b.Watcher, err = inotify.NewWatcher()
 	b.LowMemoryMode = lowmemory
+	b.Compress = compress
+	b.PreserveFile = preservefile
 	if err != nil {
 		return nil, err
 	}
@@ -119,11 +128,35 @@ func (b *BackupManager) Run(h *models.Hosts) {
  *	eName string -- file path from inotify
  */
 func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hosts, eName string) {
+	defer func() {
+		x := recover()
+		if x != nil {
+			logger.AppLog.Warn(
+				fmt.Sprintf("Error While Uploading \"%s\", for reason %v", filename, x),
+			)
+		}
+	}()
+
 	if v.BackupSet == nil {
 		logger.AppLog.Warn("No BackupSet or AppSet got, skip")
 		return
 	}
 	_, file := path.Split(strings.TrimSpace(filename))
+	file = time.Now().Format("2006/01/02") + "/" + file
+
+	if b.Compress {
+		if !regexp.MustCompile("\\.gz$|\\.zip$|\\.tgz$|\\.bz2").MatchString(eName) {
+			gz := exec.Command("gzip", eName)
+			err := gz.Run()
+			if err != nil {
+				logger.AppLog.Warn(eName, "Compress Failed.")
+			} else {
+				logger.AppLog.Debug(eName, " Will upload compressed file.")
+				return
+			}
+		}
+	}
+
 	record := &models.Records{
 		Filename:   file,
 		Host:       h,
@@ -174,8 +207,8 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 	for delay := 0; delay <= 50; delay += 10 {
 		if delay > 0 {
 			logger.AppLog.Info("Retry in", delay, "Minutes")
+			time.Sleep(time.Duration(delay) * time.Minute)
 		}
-		time.Sleep(time.Duration(delay) * time.Minute)
 		for _, p := range ps {
 			dir = fmt.Sprintf("%s%s/", dir, p)
 			err = bucket.PutObject(dir, strings.NewReader(""))
@@ -191,10 +224,11 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 		if !dirCreated {
 			continue
 		}
-		err = bucket.PutObjectFromFile(
+
+		err = bucket.UploadFile(
 			record.GetFullPath(),
 			eName,
-			oss.Routines(common.UploadThreads),
+			100*1024*1024,
 		)
 		if err != nil {
 			logger.AppLog.Warn(
@@ -202,6 +236,13 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 			fmt.Println(
 				"Error while uploading:", err)
 			continue
+		}
+		if strings.HasSuffix(eName, ".gz") && !b.PreserveFile {
+			err := os.Remove(eName)
+			logger.AppLog.Warn(
+				"Error while removing:", err)
+			fmt.Println(
+				"Error while removing:", err)
 		}
 		err = client.UploadRecord(record)
 		if err != nil {
@@ -214,4 +255,8 @@ func (b *BackupManager) doBackup(v *models.Paths, filename string, h *models.Hos
 		return
 	}
 	logger.AppLog.Warn("Backup file:", eName, "Failed.")
+	err = client.FailLog(h, eName)
+	if err != nil {
+		logger.AppLog.Warn("Upload FailLog failed:", err)
+	}
 }

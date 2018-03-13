@@ -4,22 +4,31 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"moduleab_agent/client"
-	"moduleab_agent/common"
-	"moduleab_agent/conf"
-	"moduleab_agent/logger"
-	"moduleab_agent/process"
-	"moduleab_server/models"
-	"moduleab_server/version"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"syscall"
 	"time"
+
+	"github.com/ModuleAB/ModuleAB/agent/client"
+	"github.com/ModuleAB/ModuleAB/agent/common"
+	"github.com/ModuleAB/ModuleAB/agent/conf"
+	"github.com/ModuleAB/ModuleAB/agent/logger"
+	"github.com/ModuleAB/ModuleAB/agent/process"
+	"github.com/ModuleAB/ModuleAB/server/models"
+	"github.com/ModuleAB/ModuleAB/server/version"
+	"github.com/erikdubbelboer/gspt"
 )
 
-func daemonStop() {
+const (
+	daemonStop = iota
+	daemonReload
+)
+
+func daemonCtl(s int) {
 	bpid, err := ioutil.ReadFile(
 		conf.AppConfig.GetString("pidfile"),
 	)
@@ -37,11 +46,16 @@ func daemonStop() {
 		fmt.Println("Cannot fild proc=", pid)
 		os.Exit(1)
 	}
-	err = proc.Kill()
+	if s == daemonStop {
+		err = proc.Signal(os.Interrupt)
+	} else {
+		err = proc.Kill()
+	}
 	if err != nil {
 		fmt.Println("Cannot stop daemon.")
 		os.Exit(1)
 	}
+	os.Exit(0)
 }
 
 func showHelp() {
@@ -53,36 +67,76 @@ func showHelp() {
 	fmt.Println("\t\thelp: Show this help.")
 }
 
+func lockFile() error {
+	fd, err := os.OpenFile(
+		conf.AppConfig.GetString("lockfile"),
+		os.O_RDWR|os.O_CREATE,
+		0600,
+	)
+	if err != nil {
+		return err
+	}
+	err = syscall.Flock(int(fd.Fd()), syscall.LOCK_EX)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 	timeout, err := conf.AppConfig.GetInt("timeout")
 	if err == nil {
 		client.StdHttp.Timeout = time.Duration(timeout) * time.Second
 	}
+	var isWorker = false
 
 	if len(os.Args[1:]) != 0 {
 		switch os.Args[1] {
 		case "stop":
-			daemonStop()
-			os.Exit(0)
+			daemonCtl(daemonStop)
 		case "restart":
 			fallthrough
 		case "reload":
-			daemonStop()
+			daemonCtl(daemonReload)
+		case "worker":
+			isWorker = true
 		default:
 			showHelp()
 			os.Exit(1)
 		}
 	}
+	if !isWorker {
+		if os.Getppid() != 1 {
+			exePath, _ := filepath.Abs(os.Args[0])
+			cmd := exec.Command(exePath, os.Args[1:]...)
+			cmd.Stdin = os.Stdin
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			cmd.Start()
+			fmt.Println("ModuleAB agent will run as daemon.")
+			os.Exit(0)
+		} else {
+			gspt.SetProcTitle(fmt.Sprintf("%s: ModuleAB Agent Master Process", os.Args[0]))
+			for {
+				exePath, _ := filepath.Abs(os.Args[0])
+				cmd := exec.Command(exePath, "worker")
+				cmd.Stdin = os.Stdin
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+				err := cmd.Run()
+				if err == nil {
+					os.Exit(0)
+				}
+			}
+		}
+	}
 
-	if os.Getppid() != 1 {
-		exePath, _ := filepath.Abs(os.Args[0])
-		cmd := exec.Command(exePath, os.Args[1:]...)
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Start()
-		fmt.Println("ModuleAB agent will run as daemon.")
-		os.Exit(0)
+	gspt.SetProcTitle(fmt.Sprintf("%s ModuleAB Agent Worker Process", os.Args[0]))
+
+	err = lockFile()
+	if err != nil {
+		fmt.Println("Lock Existed, exit.")
+		os.Exit(1)
 	}
 
 	ioutil.WriteFile(
@@ -105,6 +159,14 @@ func main() {
 		os.Exit(1)
 	}
 	logger.AppLog.Debug("Got config", c.ApiKey, c.ApiSecret)
+
+	go func() {
+		var c = make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt)
+		<-c
+		logger.AppLog.Info("Agent worker is shutting down.")
+		os.Exit(0)
+	}()
 
 	for {
 		run(c)
@@ -166,7 +228,7 @@ func run(c *client.AliConfig) {
 			time.Sleep(5 * time.Second)
 		}
 	}()
-	b, err := process.NewBackupManager(*c, conf.AppConfig.GetBool("lowmemorymode"))
+	b, err := process.NewBackupManager(*c, conf.AppConfig.GetBool("lowmemorymode"), conf.AppConfig.GetBool("compress"), conf.AppConfig.GetBool("preservefile"))
 	if err != nil {
 		logger.AppLog.Warn("Got error while making backup manager:", err)
 		fmt.Println("Got error while making backup manager:", err)

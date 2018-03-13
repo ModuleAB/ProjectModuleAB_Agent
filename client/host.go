@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"moduleab_agent/common"
-	"moduleab_agent/logger"
-	"moduleab_server/models"
 	"net"
 	"net/http"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/ModuleAB/ModuleAB/agent/common"
+	"github.com/ModuleAB/ModuleAB/agent/logger"
+	"github.com/ModuleAB/ModuleAB/server/models"
 )
 
 func RegisterHost() (*models.Hosts, error) {
